@@ -2,6 +2,9 @@
 name = "compare_jwt"
 version = "0.1.0"
 edition = "2024"
+license = "Apache-2.0"
+description = "JWST Stage-1 ramp-fit engine (CPU + GPU) in Rust"
+repository = "https://github.com/MaxIKweeger/James_Webb"
 
 [dependencies]
 bytemuck = "1.25.0"

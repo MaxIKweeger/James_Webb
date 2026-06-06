@@ -186,3 +186,7 @@ Data products courtesy of the **Mikulski Archive for Space Telescopes (MAST)** a
 the public `jwst` / `stcal` pipeline documentation and Fixsen et al. (2000).
 This project is an independent reimplementation for learning and performance, not an
 official STScI product.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
