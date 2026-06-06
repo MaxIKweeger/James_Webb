@@ -91,9 +91,11 @@ Things learned along the way (measured, not assumed):
 ## Repository layout
 
 ```
-src/fits.rs   minimal pure-Rust FITS reader (mmap, HDU/card parsing)
-src/main.rs   CPU pipeline + CLI + validation against rate.fits
-src/gpu.rs    wgpu compute port (WGSL kernels, packed-i16 upload, double-buffering)
+src/fits.rs        minimal pure-Rust FITS reader (mmap, HDU/card parsing)
+src/main.rs        CPU pipeline + CLI + validation against rate.fits
+src/gpu.rs         wgpu compute port (WGSL kernels, packed-i16 upload, double-buffering)
+src/output.rs      FITS / PNG / raw-f32 output writers
+pyrampfit/         Python extension (PyO3) exposing the ramp-fit core to numpy
 ```
 
 ## Getting started
@@ -188,6 +190,51 @@ With `--out result` the engine writes:
 
 Calibration steps are activated only when their reference file is supplied, so you can run
 the pipeline incrementally (e.g. slope only, then + saturation, then + variances, …).
+
+## Python integration (NASA `jwst` / `stcal` pipeline)
+
+The `pyrampfit/` folder builds a Python extension module (`jwst_rampfit`, via
+[PyO3](https://pyo3.rs)) that exposes the validated ramp-fit core as a function over
+**numpy arrays already in memory** — the form the official pipeline holds its data in.
+It is shaped as a drop-in accelerator for `stcal.ramp_fitting`:
+
+```python
+import jwst_rampfit as jr
+
+out = jr.fit_ramps(data, groupdq, gain, readnoise, group_time)
+slope = out["slope"]        # DN/s
+err   = out["err"]          # sqrt(var_poisson + var_rnoise)
+# out also has "var_poisson" and "var_rnoise"
+```
+
+- `data` — float32 `[nints, ngroups, nrows, ncols]`, the **calibrated** ramp (after the
+  saturation / superbias / linearity / dark steps, as in the pipeline).
+- `groupdq` — uint8 `[nints, ngroups, nrows, ncols]`, per-group DQ flags. Ramps are split
+  into segments on `JUMP_DET`; `DO_NOT_USE` / `SATURATED` groups are dropped
+  (constants exposed as `jr.DO_NOT_USE`, `jr.SATURATED`, `jr.JUMP_DET`).
+- `gain`, `readnoise` — float32 `[nrows, ncols]`; `group_time` — seconds.
+
+The fit (Fixsen optimal weighting + read-noise/Poisson variances + inverse-variance
+combination over segments and integrations) runs multi-threaded with `rayon`.
+
+### Build & install
+
+```bash
+cd pyrampfit
+pip install maturin numpy
+maturin build --release
+pip install --force-reinstall target/wheels/jwst_rampfit-*.whl
+python example.py        # synthetic smoke test (recovers a known slope, handles a CR)
+```
+
+### Honest scope
+
+This is a correct, in-memory, **drop-in-shaped** backend — not a merged pipeline
+feature. To use it as the actual `RampFitStep` backend you write a thin shim mapping the
+installed `stcal` `RampData` object to this call. Note `stcal` already ships a C slope
+backend, so the realistic win is full multicore scaling (and the GPU path from the parent
+project), not a magic speedup of the inner loop. `gain_scale` and jump *detection* live
+in other pipeline steps and are intentionally outside this function.
 
 ## Limitations / not implemented
 

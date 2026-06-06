@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.5,<2"]
+build-backend = "maturin"
+
+[project]
+name = "jwst-rampfit"
+version = "0.1.0"
+description = "Rust-accelerated JWST Stage-1 ramp fitting, callable from Python (drop-in for stcal ramp_fitting)"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+dependencies = ["numpy"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
