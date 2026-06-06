@@ -143,7 +143,11 @@ foreach ($f in @(
 
 ### Run
 
-CPU, full phase-3 pipeline with validation:
+Examples use `cargo run --release --` (works everywhere). If you have a prebuilt binary,
+replace that prefix with `./compare_jwt` (Linux/macOS) or `.\compare_jwt.exe` (Windows
+PowerShell). Examples assume the data files are in `data/`.
+
+**1. Full Stage-1 pipeline on the spectrum — GPU, with validation and output products:**
 
 ```bash
 cargo run --release -- data/jw01366003001_04101_00001-seg001_nrs1_uncal.fits \
@@ -154,10 +158,51 @@ cargo run --release -- data/jw01366003001_04101_00001-seg001_nrs1_uncal.fits \
   --dark data/jwst_nirspec_dark_0438.fits \
   --rn   data/jwst_nirspec_readnoise_0043.fits \
   --gain data/jwst_nirspec_gain_0025.fits \
-  --gainfact 1.429
+  --gainfact 1.429 \
+  --gpu \
+  --out result
 ```
 
-Add `--gpu` to run the same computation on the GPU.
+Writes `result.fits` / `result.png` / `result.f32` and prints the validation table.
+Drop `--gpu` to run on the CPU, `--out result` to skip writing files, or `--rate ...` to
+skip validation.
+
+The same on **Windows PowerShell** with the prebuilt binary (backtick = line continuation):
+
+```powershell
+.\compare_jwt.exe data\jw01366003001_04101_00001-seg001_nrs1_uncal.fits `
+  --rate data\jw01366003001_04101_00001-seg001_nrs1_rate.fits `
+  --sat  data\jwst_nirspec_saturation_0028.fits `
+  --bias data\jwst_nirspec_superbias_0427.fits `
+  --lin  data\jwst_nirspec_linearity_0024.fits `
+  --dark data\jwst_nirspec_dark_0438.fits `
+  --rn   data\jwst_nirspec_readnoise_0043.fits `
+  --gain data\jwst_nirspec_gain_0025.fits `
+  --gainfact 1.429 --gpu --out result
+```
+
+**2. Image of the host star WASP-39** (NIRCam imaging — see *what* the spectrum is of):
+
+```bash
+# download the raw imaging cube (~1.2 GB)
+curl -L -o data/jw01366002001_04103_00001-seg001_nrca3_uncal.fits \
+  "https://mast.stsci.edu/api/v0.1/Download/file?uri=mast:JWST/product/jw01366002001_04103_00001-seg001_nrca3_uncal.fits"
+
+# no CRDS references needed just to visualize — the slope alone reveals the star
+cargo run --release -- data/jw01366002001_04103_00001-seg001_nrca3_uncal.fits --gpu --out wasp39_img
+```
+
+`wasp39_img.png` shows WASP-39 as a defocused point source with JWST's characteristic
+6-spike diffraction pattern (the bright-object time-series imaging channel intentionally
+defocuses the star to avoid saturation).
+
+**3. Quick look at the raw ramp cube itself:**
+
+```bash
+cargo run --release -- data/jw01366003001_04101_00001-seg001_nrs1_uncal.fits --rawpng uncal
+```
+
+Writes `uncal_raw.png` (one raw read) and `uncal_cds.png` (last − first group).
 
 ### CLI flags
 
