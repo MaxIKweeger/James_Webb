@@ -8,6 +8,11 @@ the archived `rate.fits` products — and runs it **~4.8× faster** than the CPU
 > The folder name `Compare_JWT` originally hinted at JSON Web Tokens — it actually stands for
 > the **James Webb Telescope**. This project has nothing to do with web auth.
 
+> 🤖 **This project was built with [Claude](https://claude.com/claude-code)** (Anthropic's
+> Claude Code, model Claude Opus 4.8) — from the initial idea and algorithm research through
+> the full Rust implementation, pixel-level validation against the official pipeline, and the
+> GPU port.
+
 ---
 
 ## What problem this solves
@@ -198,6 +203,13 @@ Data products courtesy of the **Mikulski Archive for Space Telescopes (MAST)** a
 the public `jwst` / `stcal` pipeline documentation and Fixsen et al. (2000).
 This project is an independent reimplementation for learning and performance, not an
 official STScI product.
+
+## Acknowledgements
+
+This entire project — the idea, the algorithm research, the Rust code (CPU and GPU), the
+validation methodology, and this README — was developed in collaboration with
+**[Claude](https://claude.com/claude-code)** (Anthropic's Claude Code, model Claude Opus 4.8).
+It was built end to end as a pair-programming effort with the AI assistant.
 
 ## License
 
