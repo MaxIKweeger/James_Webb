@@ -184,11 +184,13 @@ fn main() {
     let mut jthresh = 4.0f64; // jump rejection threshold (sigma); 0 disables
     let mut use_gpu = false;
     let mut out: Option<String> = None;
+    let mut rawpng: Option<String> = None;
     let mut i = 0;
     while i < argv.len() {
         match argv[i].as_str() {
             "--gpu" => { use_gpu = true; i += 1; }
             "--out" => { out = argv.get(i + 1).cloned(); i += 2; }
+            "--rawpng" => { rawpng = argv.get(i + 1).cloned(); i += 2; }
             "--rate" => { rate = argv.get(i + 1).cloned(); i += 2; }
             "--sat" => { sat = argv.get(i + 1).cloned(); i += 2; }
             "--bias" => { bias = argv.get(i + 1).cloned(); i += 2; }
@@ -246,6 +248,19 @@ fn main() {
         let b = idx * 2;
         bzero + bscale * (i16::from_be_bytes([bytes[b], bytes[b + 1]]) as f64)
     };
+
+    // --- Raw preview: turn the uncal cube itself into images ---------------
+    if let Some(prefix) = &rawpng {
+        let glast = ngroup - 1;
+        // integration 0, last group: raw read (signal + bias pedestal)
+        let frame: Vec<f64> = (0..npix).map(|p| raw(glast * npix + p)).collect();
+        // integration 0, last - first group: accumulated signal (bias-free CDS)
+        let cds: Vec<f64> = (0..npix).map(|p| raw(glast * npix + p) - raw(p)).collect();
+        output::png_2d(&format!("{prefix}_raw.png"), &frame, nrow, ncol);
+        output::png_2d(&format!("{prefix}_cds.png"), &cds, nrow, ncol);
+        println!("Wrote {prefix}_raw.png (int 0, last group — raw DN) and {prefix}_cds.png (last-first — signal)");
+        return;
+    }
 
     // --- GPU path ----------------------------------------------------------
     if use_gpu {

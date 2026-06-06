@@ -173,6 +173,7 @@ Add `--gpu` to run the same computation on the GPU.
 | `--jumpthresh X` | jump rejection threshold in sigma (default `4.0`, `0` disables) |
 | `--gpu` | run on the GPU via `wgpu` |
 | `--out PREFIX` | write output products `PREFIX.fits`, `PREFIX.png`, `PREFIX.f32` |
+| `--rawpng PREFIX` | preview the raw cube as images: `PREFIX_raw.png` (one read) and `PREFIX_cds.png` (last−first), then exit |
 
 ### Output products
 

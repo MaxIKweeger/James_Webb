@@ -90,6 +90,11 @@ fn write_fits(path: &str, rate: &[f64], var_rn: &[f64], var_po: &[f64], nrow: us
 // --- PNG (grayscale, percentile-stretched) --------------------------------
 
 fn write_png(path: &str, rate: &[f64], nrow: usize, ncol: usize) {
+    png_2d(path, rate, nrow, ncol);
+}
+
+/// Write any 2D f64 map as a percentile-stretched grayscale PNG.
+pub fn png_2d(path: &str, rate: &[f64], nrow: usize, ncol: usize) {
     // Robust contrast: clip to the 1st/99th percentiles of finite pixels.
     let mut finite: Vec<f64> = rate.iter().copied().filter(|x| x.is_finite()).collect();
     finite.sort_by(|a, b| a.partial_cmp(b).unwrap());
