@@ -3,3 +3,6 @@
 /.claude
 commandes.txt
 *.fits
+*.png
+*.f32
+/compare_jwt.exe

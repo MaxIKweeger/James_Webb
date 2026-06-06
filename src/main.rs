@@ -17,6 +17,7 @@
 
 mod fits;
 mod gpu;
+mod output;
 
 use fits::{Fits, Hdu};
 use rayon::prelude::*;
@@ -182,10 +183,12 @@ fn main() {
     let mut gainfact = 1.0f64;
     let mut jthresh = 4.0f64; // jump rejection threshold (sigma); 0 disables
     let mut use_gpu = false;
+    let mut out: Option<String> = None;
     let mut i = 0;
     while i < argv.len() {
         match argv[i].as_str() {
             "--gpu" => { use_gpu = true; i += 1; }
+            "--out" => { out = argv.get(i + 1).cloned(); i += 2; }
             "--rate" => { rate = argv.get(i + 1).cloned(); i += 2; }
             "--sat" => { sat = argv.get(i + 1).cloned(); i += 2; }
             "--bias" => { bias = argv.get(i + 1).cloned(); i += 2; }
@@ -268,6 +271,10 @@ fn main() {
                 compare_plane(rp, "VAR_RNOISE", &vrn);
                 compare_plane(rp, "VAR_POISSON", &vpo);
             }
+        }
+        if let Some(prefix) = &out {
+            let (vr, vp): (&[f64], &[f64]) = if has_var { (&vrn, &vpo) } else { (&[], &[]) };
+            output::write_all(prefix, &rate_map, vr, vp, nrow, ncol);
         }
         return;
     }
@@ -420,6 +427,10 @@ fn main() {
             compare_plane(&rp, "VAR_RNOISE", &var_rn);
             compare_plane(&rp, "VAR_POISSON", &var_po);
         }
+    }
+    if let Some(prefix) = &out {
+        let (vr, vp): (&[f64], &[f64]) = if has_var { (&var_rn, &var_po) } else { (&[], &[]) };
+        output::write_all(prefix, &rate_map, vr, vp, nrow, ncol);
     }
 }
 

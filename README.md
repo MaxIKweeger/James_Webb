@@ -167,6 +167,18 @@ Add `--gpu` to run the same computation on the GPU.
 | `--gainfact X` | gain-scale factor (NIRSpec NRS1 = `1.429`) |
 | `--jumpthresh X` | jump rejection threshold in sigma (default `4.0`, `0` disables) |
 | `--gpu` | run on the GPU via `wgpu` |
+| `--out PREFIX` | write output products `PREFIX.fits`, `PREFIX.png`, `PREFIX.f32` |
+
+### Output products
+
+With `--out result` the engine writes:
+
+- **`result.fits`** — a multi-extension FITS product (`SCI` + `ERR` + `VAR_POISSON` +
+  `VAR_RNOISE`, float32, units DN/s), directly comparable to the official `rate.fits`.
+- **`result.png`** — a percentile-stretched grayscale view of the count-rate map (quick look
+  at the spectral trace).
+- **`result.f32`** — raw little-endian float32, row-major; read in Python with
+  `np.fromfile("result.f32", dtype="<f4").reshape(nrow, ncol)`.
 
 Calibration steps are activated only when their reference file is supplied, so you can run
 the pipeline incrementally (e.g. slope only, then + saturation, then + variances, …).
